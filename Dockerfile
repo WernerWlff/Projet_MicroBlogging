@@ -83,10 +83,11 @@ RUN mkdir -p ./apps/frontend/public
 # Build du frontend
 RUN turbo run build --filter=frontend...
 
-# Vérifier la structure générée (pour debug)
-RUN echo "=== Structure .next/standalone ===" && \
-    ls -la /app/apps/frontend/.next/standalone/ 2>/dev/null || echo "standalone not found" && \
-    find /app/apps/frontend/.next/standalone -name "server.js" -type f 2>/dev/null || echo "server.js not found in standalone"
+# Vérifier la structure générée (debug)
+RUN echo "=== Structure standalone ===" && \
+    find /app/apps/frontend/.next/standalone -name "server.js" -type f 2>/dev/null && \
+    echo "=== Contenu standalone ===" && \
+    ls -la /app/apps/frontend/.next/standalone/ 2>/dev/null | head -15
 
 # ============================================
 # Stage final: Backend
@@ -144,36 +145,48 @@ CMD ["./docker-entrypoint.sh"]
 FROM node:18-alpine AS frontend
 WORKDIR /app
 
-# Copier les fichiers buildés Next.js standalone
-# Next.js standalone crée: .next/standalone/ avec server.js à l'intérieur
-# On copie le contenu de standalone à la racine
+# Copier le contenu de standalone (qui contient déjà la structure complète)
+# En mode standalone, Next.js crée: .next/standalone/ avec la structure complète
+# La structure peut être: standalone/apps/frontend/server.js ou standalone/server.js
 COPY --from=frontend-installer /app/apps/frontend/.next/standalone ./
 
-# Copier les fichiers statiques (Next.js les attend à .next/static par rapport au serveur)
+# Copier les fichiers statiques - Next.js standalone les met dans standalone/.next/static
+# Mais on doit aussi les copier à la racine ET dans apps/frontend/.next/static pour que le serveur les trouve
 COPY --from=frontend-installer /app/apps/frontend/.next/static ./.next/static
+# Copier aussi dans apps/frontend/.next/static si le serveur s'exécute depuis apps/frontend/
+RUN mkdir -p ./apps/frontend/.next && \
+    cp -r ./.next/static ./apps/frontend/.next/static 2>/dev/null || true
 
-# Créer le dossier public (Next.js les attend à public/)
+# Créer le dossier public (sera vide si le dossier source n'existe pas)
 RUN mkdir -p ./public
 
-# Créer un script de démarrage qui trouve server.js
+# Script de démarrage qui trouve server.js et s'assure que les fichiers statiques sont accessibles
+# En mode standalone monorepo, la structure est généralement: apps/frontend/server.js
+# Next.js cherche les fichiers statiques à .next/static depuis le répertoire où server.js s'exécute
 RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'set -e' >> /app/start.sh && \
-    echo 'echo "Looking for server.js..."' >> /app/start.sh && \
-    echo 'if [ -f "/app/server.js" ]; then' >> /app/start.sh && \
-    echo '  echo "Found server.js at /app/server.js"' >> /app/start.sh && \
-    echo '  cd /app && exec node server.js' >> /app/start.sh && \
-    echo 'elif [ -f "/app/apps/frontend/server.js" ]; then' >> /app/start.sh && \
-    echo '  echo "Found server.js at /app/apps/frontend/server.js"' >> /app/start.sh && \
-    echo '  cd /app/apps/frontend && exec node server.js' >> /app/start.sh && \
-    echo 'elif [ -f "/app/.next/standalone/server.js" ]; then' >> /app/start.sh && \
-    echo '  echo "Found server.js at /app/.next/standalone/server.js"' >> /app/start.sh && \
-    echo '  cd /app/.next/standalone && exec node server.js' >> /app/start.sh && \
+    echo 'if [ -f "/app/apps/frontend/server.js" ]; then' >> /app/start.sh && \
+    echo '  cd /app/apps/frontend' >> /app/start.sh && \
+    echo '  # Créer un lien symbolique vers les fichiers statiques depuis la racine' >> /app/start.sh && \
+    echo '  if [ ! -d ".next/static" ] && [ -d "/app/.next/static" ]; then' >> /app/start.sh && \
+    echo '    ln -sf /app/.next/static ./.next/static' >> /app/start.sh && \
+    echo '  fi' >> /app/start.sh && \
+    echo '  # Vérifier que les fichiers statiques sont accessibles' >> /app/start.sh && \
+    echo '  if [ -d ".next/static" ]; then' >> /app/start.sh && \
+    echo '    echo "Static files found at .next/static"' >> /app/start.sh && \
+    echo '  else' >> /app/start.sh && \
+    echo '    echo "Warning: Static files not found at .next/static"' >> /app/start.sh && \
+    echo '  fi' >> /app/start.sh && \
+    echo '  exec node server.js' >> /app/start.sh && \
+    echo 'elif [ -f "/app/server.js" ]; then' >> /app/start.sh && \
+    echo '  cd /app' >> /app/start.sh && \
+    echo '  exec node server.js' >> /app/start.sh && \
     echo 'else' >> /app/start.sh && \
-    echo '  echo "Error: server.js not found. Listing /app:"' >> /app/start.sh && \
+    echo '  echo "Error: server.js not found"' >> /app/start.sh && \
+    echo '  echo "Searching for server.js..."' >> /app/start.sh && \
+    echo '  find /app -name "server.js" -type f 2>/dev/null' >> /app/start.sh && \
+    echo '  echo "Contents of /app:"' >> /app/start.sh && \
     echo '  ls -la /app' >> /app/start.sh && \
-    echo '  echo "Listing /app/.next:"' >> /app/start.sh && \
-    echo '  ls -la /app/.next 2>/dev/null || echo ".next not found"' >> /app/start.sh && \
-    echo '  find /app -name "server.js" -type f 2>/dev/null || echo "No server.js found"' >> /app/start.sh && \
     echo '  exit 1' >> /app/start.sh && \
     echo 'fi' >> /app/start.sh && \
     chmod +x /app/start.sh
