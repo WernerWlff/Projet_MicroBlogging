@@ -1,0 +1,3 @@
+# Ce fichier permet de garder le dossier migrations dans git
+# Les migrations Prisma seront créées ici
+

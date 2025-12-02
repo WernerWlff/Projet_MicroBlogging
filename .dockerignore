@@ -1,0 +1,75 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
+
+# Build outputs
+dist
+.next
+out
+build
+.turbo
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+# .gitignore - nécessaire pour turbo prune
+.gitattributes
+
+# Documentation
+*.md
+!README.md
+docs
+
+# Tests
+coverage
+.nyc_output
+*.test.ts
+*.spec.ts
+test
+tests
+__tests__
+
+# Logs
+logs
+*.log
+
+# Misc
+.cache
+.parcel-cache
+.eslintcache
+.stylelintcache
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+.circleci
+
+# Temporary files
+tmp
+temp
+*.tmp
+
