@@ -168,15 +168,27 @@ RUN mkdir -p ./apps/backend && \
     echo 'done' >> ./apps/backend/docker-entrypoint.sh && \
     echo 'echo "PostgreSQL is up - executing command"' >> ./apps/backend/docker-entrypoint.sh && \
     echo '' >> ./apps/backend/docker-entrypoint.sh && \
-    echo '# Appliquer les migrations Prisma' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '# Appliquer les migrations Prisma ou créer le schéma si aucune migration n''existe' >> ./apps/backend/docker-entrypoint.sh && \
     echo 'echo "Running Prisma migrations..."' >> ./apps/backend/docker-entrypoint.sh && \
     echo 'export PRISMA_SKIP_POSTINSTALL_GENERATE=1' >> ./apps/backend/docker-entrypoint.sh && \
     echo 'export PRISMA_GENERATE_SKIP_AUTOINSTALL=1' >> ./apps/backend/docker-entrypoint.sh && \
-    echo 'if [ -f "/app/node_modules/.bin/prisma" ]; then' >> ./apps/backend/docker-entrypoint.sh && \
-    echo '  PRISMA_OPENSSL_LIBRARY=/usr/lib/libssl.so.3 PRISMA_OPENSSL_BINARY=/usr/bin/openssl PRISMA_SKIP_POSTINSTALL_GENERATE=1 PRISMA_GENERATE_SKIP_AUTOINSTALL=1 /app/node_modules/.bin/prisma migrate deploy || echo "Migrations failed or already applied";' >> ./apps/backend/docker-entrypoint.sh && \
-    echo 'else' >> ./apps/backend/docker-entrypoint.sh && \
-    echo '  PRISMA_OPENSSL_LIBRARY=/usr/lib/libssl.so.3 PRISMA_OPENSSL_BINARY=/usr/bin/openssl PRISMA_SKIP_POSTINSTALL_GENERATE=1 PRISMA_GENERATE_SKIP_AUTOINSTALL=1 prisma migrate deploy || echo "Migrations failed or already applied";' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'cd /app/apps/backend' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'PRISMA_CMD="/app/node_modules/.bin/prisma"' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'if [ ! -f "$PRISMA_CMD" ]; then' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '  PRISMA_CMD="prisma"' >> ./apps/backend/docker-entrypoint.sh && \
     echo 'fi' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'export PRISMA_OPENSSL_LIBRARY=/usr/lib/libssl.so.3' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'export PRISMA_OPENSSL_BINARY=/usr/bin/openssl' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '# Vérifier si des migrations existent (en excluant .gitkeep et autres fichiers cachés)' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'MIGRATION_COUNT=$(find prisma/migrations -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'if [ "$MIGRATION_COUNT" -gt 0 ]; then' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '  echo "Migrations found ($MIGRATION_COUNT), applying..."' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '  $PRISMA_CMD migrate deploy && echo "✓ Migrations applied successfully" || (echo "✗ Migrations failed, trying db push..." && $PRISMA_CMD db push --accept-data-loss && echo "✓ Schema pushed successfully")' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'else' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '  echo "No migrations found, pushing schema directly..."' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '  $PRISMA_CMD db push --accept-data-loss && echo "✓ Schema pushed successfully" || (echo "✗ Schema push failed, check logs above" && exit 1)' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'fi' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'echo "Database schema is ready"' >> ./apps/backend/docker-entrypoint.sh && \
     echo '' >> ./apps/backend/docker-entrypoint.sh && \
     echo '# Exécuter le seed si la base est vide (optionnel - commentez si vous ne voulez pas de données de test)' >> ./apps/backend/docker-entrypoint.sh && \
     echo 'if [ "$RUN_SEED" = "true" ]; then' >> ./apps/backend/docker-entrypoint.sh && \

@@ -24,7 +24,7 @@ services:
       - "3001:3001"
     environment:
       DATABASE_URL: "postgresql://user:password@db:5432/microblogging?schema=public"
-      RUN_SEED: "true"  # Mettre à "false" pour désactiver le seed automatique
+      RUN_SEED: "false"  # Mettre à "false" pour désactiver le seed automatique
     depends_on:
       db:
         condition: service_healthy
