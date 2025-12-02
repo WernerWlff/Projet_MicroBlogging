@@ -45,7 +45,7 @@ COPY tsconfig.base.json tsconfig.base.json
 # Prisma generate essaie d'installer @prisma/client automatiquement si ce n'est pas le cas
 RUN cd /app && \
     echo "Installing @prisma/client and prisma CLI if needed..." && \
-    npm install @prisma/client@6.1.0 prisma@6.1.0 --no-save --legacy-peer-deps && \
+    npm install @prisma/client@^5.20.0 prisma@^5.20.0 --no-save --legacy-peer-deps && \
     echo "Verifying installation..." && \
     ls -la node_modules/@prisma/client/package.json 2>/dev/null && \
     ls -la node_modules/.bin/prisma 2>/dev/null && \
@@ -54,6 +54,8 @@ RUN cd /app && \
     cd apps/backend && \
     echo "Generating Prisma client..." && \
     PRISMA_SKIP_POSTINSTALL_GENERATE=1 \
+    PRISMA_GENERATE_SKIP_AUTOINSTALL=1 \
+    PRISMA_SKIP_AUTOINSTALL=1 \
     PRISMA_OPENSSL_LIBRARY=/usr/lib/libssl.so.3 \
     PRISMA_OPENSSL_BINARY=/usr/bin/openssl \
     /app/node_modules/.bin/prisma generate
@@ -113,19 +115,28 @@ WORKDIR /app
 RUN apk add --no-cache openssl openssl-dev libc6-compat netcat-openbsd
 
 # Installer Prisma CLI globalement pour le script de démarrage
-RUN npm install -g prisma@6.1.0
+RUN npm install -g prisma@^5.20.0
 
 # Copier les fichiers buildés et nécessaires
 # Vérifier que le build a bien créé dist/main.js
 COPY --from=backend-installer /app/apps/backend/dist ./apps/backend/dist
 COPY --from=backend-installer /app/apps/backend/package.json ./apps/backend/
+# Copier les node_modules depuis backend-installer
 COPY --from=backend-installer /app/node_modules ./node_modules
+# Copier aussi le package.json racine pour pouvoir réinstaller si nécessaire
+COPY --from=backend-installer /app/package.json ./package.json
+# Vérifier que les dépendances critiques sont présentes et réinstaller si nécessaire
+RUN echo "Checking critical dependencies..." && \
+    if [ ! -d "/app/node_modules/@nestjs/core" ]; then \
+        echo "WARNING: @nestjs/core not found, reinstalling dependencies..." && \
+        cd /app && npm install --production --legacy-peer-deps; \
+    fi && \
+    echo "Verifying dependencies:" && \
+    ls -la /app/node_modules/@nestjs/core 2>/dev/null && echo "✓ @nestjs/core found" || echo "✗ @nestjs/core NOT found" && \
+    ls -la /app/node_modules/@prisma/client 2>/dev/null && echo "✓ @prisma/client found" || echo "✗ @prisma/client NOT found" && \
+    ls -la /app/node_modules/.bin/prisma 2>/dev/null && echo "✓ prisma binary found" || echo "✗ prisma binary NOT found"
 COPY --from=backend-installer /app/apps/backend/prisma ./apps/backend/prisma
-# Copier le script de seed
-COPY --from=backend-installer /app/apps/backend/prisma/seed.ts ./apps/backend/prisma/seed.ts
-# Installer ts-node dans l'image finale pour pouvoir exécuter le seed
-RUN npm install -g ts-node typescript
-# Installer ts-node dans l'image finale pour pouvoir exécuter le seed
+# Installer ts-node et typescript globalement pour pouvoir exécuter le seed
 RUN npm install -g ts-node typescript
 
 # Créer le script de démarrage qui attend la DB, génère Prisma et applique les migrations
@@ -134,18 +145,20 @@ RUN mkdir -p ./apps/backend && \
     echo 'set -e' >> ./apps/backend/docker-entrypoint.sh && \
     echo 'cd /app/apps/backend' >> ./apps/backend/docker-entrypoint.sh && \
     echo '' >> ./apps/backend/docker-entrypoint.sh && \
-    echo '# Générer le client Prisma si nécessaire' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '# Générer le client Prisma (OBLIGATOIRE avant le démarrage)' >> ./apps/backend/docker-entrypoint.sh && \
     echo '# Désactiver l''installation automatique de Prisma' >> ./apps/backend/docker-entrypoint.sh && \
     echo 'export PRISMA_SKIP_POSTINSTALL_GENERATE=1' >> ./apps/backend/docker-entrypoint.sh && \
-    echo 'if [ ! -d "node_modules/.prisma/client" ]; then' >> ./apps/backend/docker-entrypoint.sh && \
-    echo '  echo "Generating Prisma client..."' >> ./apps/backend/docker-entrypoint.sh && \
-    echo '  if [ -f "/app/node_modules/.bin/prisma" ]; then' >> ./apps/backend/docker-entrypoint.sh && \
-    echo '    PRISMA_OPENSSL_LIBRARY=/usr/lib/libssl.so.3 PRISMA_OPENSSL_BINARY=/usr/bin/openssl /app/node_modules/.bin/prisma generate;' >> ./apps/backend/docker-entrypoint.sh && \
-    echo '  else' >> ./apps/backend/docker-entrypoint.sh && \
-    echo '    echo "Using global Prisma installation";' >> ./apps/backend/docker-entrypoint.sh && \
-    echo '    PRISMA_OPENSSL_LIBRARY=/usr/lib/libssl.so.3 PRISMA_OPENSSL_BINARY=/usr/bin/openssl prisma generate;' >> ./apps/backend/docker-entrypoint.sh && \
-    echo '  fi' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'export PRISMA_GENERATE_SKIP_AUTOINSTALL=1' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'export PRISMA_SKIP_AUTOINSTALL=1' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'echo "Generating Prisma client..."' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'if [ -f "/app/node_modules/.bin/prisma" ]; then' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '  cd /app/apps/backend && PRISMA_OPENSSL_LIBRARY=/usr/lib/libssl.so.3 PRISMA_OPENSSL_BINARY=/usr/bin/openssl PRISMA_SKIP_POSTINSTALL_GENERATE=1 PRISMA_GENERATE_SKIP_AUTOINSTALL=1 /app/node_modules/.bin/prisma generate || echo "Prisma generate failed, but continuing...";' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'else' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '  echo "Using global Prisma installation";' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '  cd /app/apps/backend && PRISMA_OPENSSL_LIBRARY=/usr/lib/libssl.so.3 PRISMA_OPENSSL_BINARY=/usr/bin/openssl PRISMA_SKIP_POSTINSTALL_GENERATE=1 PRISMA_GENERATE_SKIP_AUTOINSTALL=1 prisma generate || echo "Prisma generate failed, but continuing...";' >> ./apps/backend/docker-entrypoint.sh && \
     echo 'fi' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'echo "Prisma client generated"' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'cd /app/apps/backend' >> ./apps/backend/docker-entrypoint.sh && \
     echo '' >> ./apps/backend/docker-entrypoint.sh && \
     echo '# Attendre que la base de données soit prête' >> ./apps/backend/docker-entrypoint.sh && \
     echo 'echo "Waiting for database to be ready..."' >> ./apps/backend/docker-entrypoint.sh && \
@@ -158,16 +171,24 @@ RUN mkdir -p ./apps/backend && \
     echo '# Appliquer les migrations Prisma' >> ./apps/backend/docker-entrypoint.sh && \
     echo 'echo "Running Prisma migrations..."' >> ./apps/backend/docker-entrypoint.sh && \
     echo 'export PRISMA_SKIP_POSTINSTALL_GENERATE=1' >> ./apps/backend/docker-entrypoint.sh && \
+    echo 'export PRISMA_GENERATE_SKIP_AUTOINSTALL=1' >> ./apps/backend/docker-entrypoint.sh && \
     echo 'if [ -f "/app/node_modules/.bin/prisma" ]; then' >> ./apps/backend/docker-entrypoint.sh && \
-    echo '  PRISMA_OPENSSL_LIBRARY=/usr/lib/libssl.so.3 PRISMA_OPENSSL_BINARY=/usr/bin/openssl /app/node_modules/.bin/prisma migrate deploy || echo "Migrations failed or already applied";' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '  PRISMA_OPENSSL_LIBRARY=/usr/lib/libssl.so.3 PRISMA_OPENSSL_BINARY=/usr/bin/openssl PRISMA_SKIP_POSTINSTALL_GENERATE=1 PRISMA_GENERATE_SKIP_AUTOINSTALL=1 /app/node_modules/.bin/prisma migrate deploy || echo "Migrations failed or already applied";' >> ./apps/backend/docker-entrypoint.sh && \
     echo 'else' >> ./apps/backend/docker-entrypoint.sh && \
-    echo '  PRISMA_OPENSSL_LIBRARY=/usr/lib/libssl.so.3 PRISMA_OPENSSL_BINARY=/usr/bin/openssl prisma migrate deploy || echo "Migrations failed or already applied";' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '  PRISMA_OPENSSL_LIBRARY=/usr/lib/libssl.so.3 PRISMA_OPENSSL_BINARY=/usr/bin/openssl PRISMA_SKIP_POSTINSTALL_GENERATE=1 PRISMA_GENERATE_SKIP_AUTOINSTALL=1 prisma migrate deploy || echo "Migrations failed or already applied";' >> ./apps/backend/docker-entrypoint.sh && \
     echo 'fi' >> ./apps/backend/docker-entrypoint.sh && \
     echo '' >> ./apps/backend/docker-entrypoint.sh && \
     echo '# Exécuter le seed si la base est vide (optionnel - commentez si vous ne voulez pas de données de test)' >> ./apps/backend/docker-entrypoint.sh && \
     echo 'if [ "$RUN_SEED" = "true" ]; then' >> ./apps/backend/docker-entrypoint.sh && \
     echo '  echo "Running Prisma seed..."' >> ./apps/backend/docker-entrypoint.sh && \
-    echo '  cd /app/apps/backend && PRISMA_OPENSSL_LIBRARY=/usr/lib/libssl.so.3 PRISMA_OPENSSL_BINARY=/usr/bin/openssl ts-node --transpile-only prisma/seed.ts || echo "Seed failed or already executed"' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '  cd /app/apps/backend' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '  # Le client Prisma devrait déjà être généré au début du script' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '  # Exécuter le seed avec le bon chemin' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '  if [ -f "prisma/seed.ts" ]; then' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '    NODE_PATH=/app/node_modules:/app/apps/backend/node_modules PRISMA_OPENSSL_LIBRARY=/usr/lib/libssl.so.3 PRISMA_OPENSSL_BINARY=/usr/bin/openssl ts-node --transpile-only --skip-project --compiler-options '"'"'{"module":"commonjs","moduleResolution":"node"}'"'"' prisma/seed.ts 2>&1 || echo "Seed failed or already executed"' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '  else' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '    echo "Seed file not found at prisma/seed.ts"' >> ./apps/backend/docker-entrypoint.sh && \
+    echo '  fi' >> ./apps/backend/docker-entrypoint.sh && \
     echo 'fi' >> ./apps/backend/docker-entrypoint.sh && \
     echo '' >> ./apps/backend/docker-entrypoint.sh && \
     echo '# Démarrer l''application' >> ./apps/backend/docker-entrypoint.sh && \
