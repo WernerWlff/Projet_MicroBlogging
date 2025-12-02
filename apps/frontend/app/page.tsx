@@ -179,7 +179,7 @@ export default function Home() {
 
             <main className="max-w-4xl mx-auto px-4 py-8">
                 {/* Create Post Form - Seulement si connecté */}
-                {isAuthenticated() ? (
+                {isAuthenticated() && (
                     <div className="bg-white rounded-xl shadow-md p-6 mb-8">
                         <h2 className="text-xl font-semibold text-gray-900 mb-4">
                             Quoi de neuf ?
@@ -211,26 +211,6 @@ export default function Home() {
                                 </button>
                             </div>
                         </form>
-                    </div>
-                ) : (
-                    <div className="bg-white rounded-xl shadow-md p-6 mb-8 text-center">
-                        <p className="text-gray-600 mb-4">
-                            Connectez-vous pour partager vos pensées avec la communauté !
-                        </p>
-                        <div className="flex gap-4 justify-center">
-                            <Link
-                                href="/login"
-                                className="px-6 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors border border-blue-600"
-                            >
-                                Se connecter
-                            </Link>
-                            <Link
-                                href="/register"
-                                className="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg transition-all"
-                            >
-                                Créer un compte
-                            </Link>
-                        </div>
                     </div>
                 )}
 
