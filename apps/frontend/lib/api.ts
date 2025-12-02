@@ -94,6 +94,13 @@ class ApiClient {
         });
     }
 
+    async updatePost(id: string, content: string): Promise<Post> {
+        return this.request<Post>(`/posts/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ content }),
+        });
+    }
+
     async deletePost(id: string): Promise<void> {
         return this.request<void>(`/posts/${id}`, {
             method: 'DELETE',

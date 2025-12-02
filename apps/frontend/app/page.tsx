@@ -13,6 +13,8 @@ export default function Home() {
     const [loading, setLoading] = useState(true);
     const [posting, setPosting] = useState(false);
     const [error, setError] = useState('');
+    const [editingPostId, setEditingPostId] = useState<string | null>(null);
+    const [editingContent, setEditingContent] = useState('');
     const user = getUser();
 
     useEffect(() => {
@@ -70,6 +72,29 @@ export default function Home() {
             }
         } finally {
             setPosting(false);
+        }
+    };
+
+    const handleEdit = (post: Post) => {
+        setEditingPostId(post.id);
+        setEditingContent(post.content);
+    };
+
+    const handleCancelEdit = () => {
+        setEditingPostId(null);
+        setEditingContent('');
+    };
+
+    const handleUpdate = async (id: string) => {
+        if (!editingContent.trim()) return;
+
+        try {
+            const updatedPost = await api.updatePost(id, editingContent);
+            setPosts(posts.map((p) => (p.id === id ? updatedPost : p)));
+            setEditingPostId(null);
+            setEditingContent('');
+        } catch (err: any) {
+            setError(err.message || 'Failed to update post');
         }
     };
 
@@ -250,17 +275,54 @@ export default function Home() {
                                         </p>
                                     </div>
                                     {user && post.authorId === user.id && (
-                                        <button
-                                            onClick={() => handleDelete(post.id)}
-                                            className="text-red-500 hover:text-red-700 text-sm font-medium"
-                                        >
-                                            Supprimer
-                                        </button>
+                                        <div className="flex gap-2">
+                                            {editingPostId === post.id ? (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleUpdate(post.id)}
+                                                        className="text-green-500 hover:text-green-700 text-sm font-medium"
+                                                    >
+                                                        Enregistrer
+                                                    </button>
+                                                    <button
+                                                        onClick={handleCancelEdit}
+                                                        className="text-gray-500 hover:text-gray-700 text-sm font-medium"
+                                                    >
+                                                        Annuler
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleEdit(post)}
+                                                        className="text-blue-500 hover:text-blue-700 text-sm font-medium"
+                                                    >
+                                                        Modifier
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(post.id)}
+                                                        className="text-red-500 hover:text-red-700 text-sm font-medium"
+                                                    >
+                                                        Supprimer
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
-                                <p className="text-gray-800 whitespace-pre-wrap">
-                                    {post.content}
-                                </p>
+                                {editingPostId === post.id ? (
+                                    <textarea
+                                        value={editingContent}
+                                        onChange={(e) => setEditingContent(e.target.value)}
+                                        maxLength={500}
+                                        rows={4}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                    />
+                                ) : (
+                                    <p className="text-gray-800 whitespace-pre-wrap">
+                                        {post.content}
+                                    </p>
+                                )}
                             </div>
                         ))
                     )}
