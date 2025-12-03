@@ -147,9 +147,13 @@ export default function Home() {
                     <nav className="flex items-center gap-2 sm:gap-4" aria-label="Navigation principale">
                         {user ? (
                             <>
-                                <span className="text-green-darkest font-medium text-sm sm:text-base">
+                                <Link
+                                    href="/profile"
+                                    className="text-green-darkest font-medium text-sm sm:text-base hover:text-green-darker hover:underline transition-colors focus:outline-none focus:ring-2 focus:ring-green-dark focus:ring-offset-2 rounded px-2 py-1"
+                                    aria-label="Voir mon profil"
+                                >
                                     {user.username}
-                                </span>
+                                </Link>
                                 <button
                                     onClick={logout}
                                     className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-green-darkest hover:text-green-darkest hover:bg-green-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-dark focus:ring-offset-2"

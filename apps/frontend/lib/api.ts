@@ -17,9 +17,36 @@ export interface Post {
     updatedAt: string;
 }
 
+export interface UserPost {
+    id: string;
+    content: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface ProfileResponse {
+    id: string;
+    email: string;
+    username: string;
+    createdAt: string;
+    updatedAt: string;
+    postsCount: number;
+    posts: UserPost[];
+}
+
 export interface AuthResponse {
     user: User;
     token: string;
+}
+
+export interface UserListItem {
+    id: string;
+    email: string;
+    username: string;
+    createdAt: string;
+    _count: {
+        posts: number;
+    };
 }
 
 class ApiClient {
@@ -82,6 +109,12 @@ class ApiClient {
         });
     }
 
+    async getProfile(): Promise<ProfileResponse> {
+        return this.request<ProfileResponse>('/auth/profile', {
+            method: 'GET',
+        });
+    }
+
     // Posts
     async getPosts(): Promise<Post[]> {
         return this.request<Post[]>('/posts');
@@ -104,6 +137,12 @@ class ApiClient {
     async deletePost(id: string): Promise<void> {
         return this.request<void>(`/posts/${id}`, {
             method: 'DELETE',
+        });
+    }
+
+    async getUsers(): Promise<UserListItem[]> {
+        return this.request<UserListItem[]>(`/auth/users`,{
+            method: 'GET',
         });
     }
 }
