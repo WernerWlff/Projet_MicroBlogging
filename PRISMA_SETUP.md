@@ -44,8 +44,8 @@ npx prisma migrate reset
 
 ## 🐳 Dans Docker
 
-Le script de démarrage du backend :
-1. Attend que la base de données soit prête (via `wait-for-db.sh`)
+Le script de démarrage du backend (généré automatiquement dans le Dockerfile) :
+1. Attend que la base de données soit prête (via `nc` - netcat)
 2. Génère le client Prisma si nécessaire
 3. Applique les migrations automatiquement
 4. Démarre l'application
