@@ -10,10 +10,9 @@
 ---
 
 ### 🟢 Node.js
-- **Version** : `18` (dans les Dockerfiles)
-- **Fichiers** : 
-  - `apps/backend/Dockerfile` (ligne 1)
-  - `apps/frontend/Dockerfile` (ligne 1)
+- **Version** : `20` (dans le Dockerfile principal)
+- **Fichier** : 
+  - `Dockerfile` (ligne 5) - Dockerfile multi-stage à la racine
 - **Note** : Version LTS actuelle recommandée
 
 ---
