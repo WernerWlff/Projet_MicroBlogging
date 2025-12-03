@@ -117,7 +117,7 @@ export default function Home() {
         const hours = Math.floor(minutes / 60);
         const days = Math.floor(hours / 24);
 
-        if (minutes < 1) return 'À l\'instant';
+        if (minutes < 1) return "À l'instant";
         if (minutes < 60) return `Il y a ${minutes} min`;
         if (hours < 24) return `Il y a ${hours}h`;
         if (days < 7) return `Il y a ${days}j`;
@@ -127,32 +127,33 @@ export default function Home() {
     // Ne bloquer l'affichage que si c'est le premier chargement et qu'il n'y a pas d'erreur
     if (loading && posts.length === 0 && !error) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cream-50 via-cream-100 to-green-50">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Chargement...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-dark mx-auto"></div>
+                    <p className="mt-4 text-green-darkest">Chargement...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="min-h-screen bg-gradient-to-br from-cream-50 via-cream-100 to-green-50">
             {/* Header */}
-            <header className="bg-white shadow-sm border-b border-gray-200">
-                <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <header className="bg-cream-50 shadow-sm border-b border-green-200">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-green-dark to-green-darker bg-clip-text text-transparent">
                         MicroBlogging
                     </h1>
-                    <div className="flex items-center gap-4">
+                    <nav className="flex items-center gap-2 sm:gap-4" aria-label="Navigation principale">
                         {user ? (
                             <>
-                                <span className="text-gray-700 font-medium">
+                                <span className="text-green-darkest font-medium text-sm sm:text-base">
                                     {user.username}
                                 </span>
                                 <button
                                     onClick={logout}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-green-darkest hover:text-green-darkest hover:bg-green-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-dark focus:ring-offset-2"
+                                    aria-label="Se déconnecter"
                                 >
                                     Déconnexion
                                 </button>
@@ -161,51 +162,60 @@ export default function Home() {
                             <>
                                 <Link
                                     href="/login"
-                                    className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-green-dark hover:text-green-darker hover:bg-green-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-dark focus:ring-offset-2"
+                                    aria-label="Se connecter"
                                 >
                                     Connexion
                                 </Link>
                                 <Link
                                     href="/register"
-                                    className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg transition-all"
+                                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-gradient-to-r from-green-dark to-green-darker hover:from-green-darker hover:to-green-darkest rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-green-dark focus:ring-offset-2"
+                                    aria-label="Créer un compte"
                                 >
                                     S'inscrire
                                 </Link>
                             </>
                         )}
-                    </div>
+                    </nav>
                 </div>
             </header>
 
-            <main className="max-w-4xl mx-auto px-4 py-8">
+            <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
                 {/* Create Post Form - Seulement si connecté */}
                 {isAuthenticated() && (
-                    <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                    <div className="bg-cream-50 rounded-xl shadow-md p-4 sm:p-6 mb-6 sm:mb-8 border border-green-100">
+                        <h2 className="text-lg sm:text-xl font-semibold text-green-darkest mb-4">
                             Quoi de neuf ?
                         </h2>
                         {error && (
-                            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg" role="alert" aria-live="polite">
                                 {error}
                             </div>
                         )}
-                        <form onSubmit={handlePost} className="space-y-4">
+                        <form onSubmit={handlePost} className="space-y-4" aria-label="Formulaire de publication">
+                            <label htmlFor="new-post" className="sr-only">
+                                Contenu du post
+                            </label>
                             <textarea
+                                id="new-post"
                                 value={newPost}
                                 onChange={(e) => setNewPost(e.target.value)}
                                 placeholder="Partagez vos pensées..."
                                 maxLength={500}
                                 rows={4}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                className="w-full px-4 py-3 border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-dark focus:border-green-dark resize-none bg-white text-green-darkest placeholder-green-dark"
+                                aria-label="Zone de texte pour écrire votre post"
+                                aria-describedby="char-count"
                             />
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-500">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                <span id="char-count" className="text-xs sm:text-sm text-green-darkest">
                                     {newPost.length}/500
                                 </span>
                                 <button
                                     type="submit"
                                     disabled={!newPost.trim() || posting}
-                                    className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                    className="w-full sm:w-auto px-6 py-2 bg-gradient-to-r from-green-dark to-green-darker text-white font-medium rounded-lg hover:from-green-darker hover:to-green-darkest focus:outline-none focus:ring-2 focus:ring-green-dark focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                    aria-label={posting ? 'Publication en cours' : 'Publier le post'}
                                 >
                                     {posting ? 'Publication...' : 'Publier'}
                                 </button>
@@ -216,7 +226,7 @@ export default function Home() {
 
                 {/* Posts List */}
                 {error && (
-                    <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mb-4">
+                    <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mb-4" role="alert" aria-live="polite">
                         <p className="font-medium">⚠️ {error}</p>
                         {error.includes('backend') || error.includes('serveur') || error.includes('connecter') ? (
                             <p className="text-sm mt-1">
@@ -228,45 +238,48 @@ export default function Home() {
                     </div>
                 )}
                 {loading && posts.length > 0 && (
-                    <div className="text-center text-gray-500 text-sm mb-4">
+                    <div className="text-center text-green-darkest text-sm mb-4" aria-live="polite">
                         Actualisation...
                     </div>
                 )}
-                <div className="space-y-4">
+                <div className="space-y-4" role="feed" aria-label="Liste des posts">
                     {posts.length === 0 && !loading ? (
-                        <div className="bg-white rounded-xl shadow-md p-12 text-center">
-                            <p className="text-gray-500 text-lg">
+                        <div className="bg-cream-50 rounded-xl shadow-md p-8 sm:p-12 text-center border border-green-100">
+                            <p className="text-green-darkest text-base sm:text-lg">
                                 Aucun post pour le moment. Soyez le premier à publier !
                             </p>
                         </div>
                     ) : (
                         posts.map((post) => (
-                            <div
+                            <article
                                 key={post.id}
-                                className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow"
+                                className="bg-cream-50 rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow border border-green-100"
+                                aria-label={`Post de ${post.author.username}`}
                             >
-                                <div className="flex justify-between items-start mb-3">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-start mb-3 gap-2">
                                     <div>
-                                        <h3 className="font-semibold text-gray-900">
+                                        <h3 className="font-semibold text-green-darkest text-base sm:text-lg">
                                             {post.author.username}
                                         </h3>
-                                        <p className="text-sm text-gray-500">
+                                        <time className="text-xs sm:text-sm text-green-dark" dateTime={post.createdAt}>
                                             {formatDate(post.createdAt)}
-                                        </p>
+                                        </time>
                                     </div>
                                     {user && post.authorId === user.id && (
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-2 flex-wrap">
                                             {editingPostId === post.id ? (
                                                 <>
                                                     <button
                                                         onClick={() => handleUpdate(post.id)}
-                                                        className="text-green-500 hover:text-green-700 text-sm font-medium"
+                                                        className="text-green-dark hover:text-green-darker text-xs sm:text-sm font-medium px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-green-dark focus:ring-offset-1"
+                                                        aria-label="Enregistrer les modifications"
                                                     >
                                                         Enregistrer
                                                     </button>
                                                     <button
                                                         onClick={handleCancelEdit}
-                                                        className="text-gray-500 hover:text-gray-700 text-sm font-medium"
+                                                        className="text-green-darkest hover:text-green-darkest hover:bg-green-100 text-xs sm:text-sm font-medium px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-green-dark focus:ring-offset-1"
+                                                        aria-label="Annuler les modifications"
                                                     >
                                                         Annuler
                                                     </button>
@@ -275,13 +288,15 @@ export default function Home() {
                                                 <>
                                                     <button
                                                         onClick={() => handleEdit(post)}
-                                                        className="text-blue-500 hover:text-blue-700 text-sm font-medium"
+                                                        className="text-green-dark hover:text-green-darker text-xs sm:text-sm font-medium px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-green-dark focus:ring-offset-1"
+                                                        aria-label={`Modifier le post de ${post.author.username}`}
                                                     >
                                                         Modifier
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(post.id)}
-                                                        className="text-red-500 hover:text-red-700 text-sm font-medium"
+                                                        className="text-red-600 hover:text-red-700 text-xs sm:text-sm font-medium px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
+                                                        aria-label={`Supprimer le post de ${post.author.username}`}
                                                     >
                                                         Supprimer
                                                     </button>
@@ -291,19 +306,26 @@ export default function Home() {
                                     )}
                                 </div>
                                 {editingPostId === post.id ? (
-                                    <textarea
-                                        value={editingContent}
-                                        onChange={(e) => setEditingContent(e.target.value)}
-                                        maxLength={500}
-                                        rows={4}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                    />
+                                    <>
+                                        <label htmlFor={`edit-post-${post.id}`} className="sr-only">
+                                            Modifier le contenu du post
+                                        </label>
+                                        <textarea
+                                            id={`edit-post-${post.id}`}
+                                            value={editingContent}
+                                            onChange={(e) => setEditingContent(e.target.value)}
+                                            maxLength={500}
+                                            rows={4}
+                                            className="w-full px-4 py-3 border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-dark focus:border-green-dark resize-none bg-white text-green-darkest"
+                                            aria-label="Zone de texte pour modifier votre post"
+                                        />
+                                    </>
                                 ) : (
-                                    <p className="text-gray-800 whitespace-pre-wrap">
+                                    <p className="text-green-darkest whitespace-pre-wrap text-sm sm:text-base">
                                         {post.content}
                                     </p>
                                 )}
-                            </div>
+                            </article>
                         ))
                     )}
                 </div>
