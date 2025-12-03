@@ -1,17 +1,63 @@
 # Fiche de Features - Projet MicroBlogging
 
+## 📊 Récapitulatif de l'État
+
+### ✅ Fonctionnalités Complétées
+- **Authentification** : Inscription, connexion, JWT, déconnexion
+- **CRUD Posts** : Création, lecture, modification, suppression
+- **Interface utilisateur** : Pages d'accueil, login, register avec design moderne
+- **Sécurité** : Hashage des mots de passe, protection des routes
+
+### ⏳ Fonctionnalités En Cours / À Faire
+- Système de likes
+- Follow/Unfollow
+- Profil utilisateur
+- Commentaires/Réponses
+- Recherche
+- Notifications
+- Upload de médias
+
+---
+
 ## 📋 État Actuel du Projet
 
-Le projet est actuellement en phase de setup initial avec :
-- **Backend** : NestJS avec Prisma ORM
+Le projet est actuellement en phase de développement avec les fonctionnalités de base implémentées :
+- **Backend** : NestJS avec Prisma ORM et PostgreSQL
 - **Frontend** : Next.js avec React et Tailwind CSS
 - **Base de données** : PostgreSQL avec schéma Prisma (User, Post)
 - **Architecture** : Monorepo avec Turbo
-- **Infrastructure** : Docker Compose
+- **Infrastructure** : Docker Compose avec multi-stage builds
+- **Authentification** : JWT avec Passport
 
 ### Modèles de données actuels
 - **User** : id, email, username, password, posts, createdAt, updatedAt
 - **Post** : id, content, authorId, author, createdAt, updatedAt
+
+### ✅ Fonctionnalités Implémentées
+
+#### Authentification
+- ✅ **Inscription** : Création de compte avec email, username et mot de passe
+- ✅ **Connexion** : Login avec email et mot de passe
+- ✅ **JWT Tokens** : Authentification par tokens JWT
+- ✅ **Déconnexion** : Logout avec suppression du token
+- ✅ **Protection des routes** : Routes protégées avec JwtAuthGuard
+- ✅ **Interface utilisateur** : Pages de login et register avec design cohérent
+
+#### Gestion des Posts
+- ✅ **Création** : Publier un nouveau post avec validation (max 500 caractères)
+- ✅ **Lecture** : Affichage de tous les posts (liste publique)
+- ✅ **Modification** : Éditer ses propres posts
+- ✅ **Suppression** : Supprimer ses posts (hard delete)
+- ✅ **Limite de caractères** : Validation de longueur (500 caractères)
+- ✅ **Affichage** : Liste des posts avec auteur, date formatée et contenu
+- ✅ **Interface utilisateur** : Formulaire de création, édition inline, boutons de suppression
+
+#### Interface Utilisateur
+- ✅ **Design moderne** : Tailwind CSS avec gradient bleu/violet
+- ✅ **Navigation** : Header avec liens de connexion/inscription ou info utilisateur
+- ✅ **Responsive** : Design adaptatif
+- ✅ **Gestion d'erreurs** : Affichage des erreurs utilisateur
+- ✅ **États de chargement** : Indicateurs de chargement
 
 ---
 
@@ -20,29 +66,34 @@ Le projet est actuellement en phase de setup initial avec :
 ### 🔐 Authentification & Sécurité (Priorité Haute)
 
 #### 1. Système d'authentification complet
-- **Inscription** : Création de compte avec validation email
-- **Connexion** : Login avec email/username + mot de passe
-- **JWT Tokens** : Authentification par tokens (access + refresh tokens)
-- **OAuth2** : Connexion via Google, Twitter, GitHub
-- **Mot de passe oublié** : Réinitialisation par email
-- **Vérification email** : Confirmation d'email à l'inscription
-- **2FA** : Authentification à deux facteurs (optionnelle)
+- ✅ **Inscription** : Création de compte avec validation email
+- ✅ **Connexion** : Login avec email + mot de passe
+- ✅ **JWT Tokens** : Authentification par tokens (access token uniquement)
+- ⏳ **Refresh Tokens** : Système de refresh tokens pour renouveler l'access token
+- ⏳ **OAuth2** : Connexion via Google, Twitter, GitHub
+- ⏳ **Mot de passe oublié** : Réinitialisation par email
+- ⏳ **Vérification email** : Confirmation d'email à l'inscription
+- ⏳ **2FA** : Authentification à deux facteurs (optionnelle)
 
 #### 2. Gestion des sessions
-- **Sessions multiples** : Gérer plusieurs sessions actives
-- **Déconnexion** : Logout avec invalidation de tokens
-- **Sécurité** : Protection CSRF, rate limiting
+- ⏳ **Sessions multiples** : Gérer plusieurs sessions actives
+- ✅ **Déconnexion** : Logout avec suppression du token local
+- ⏳ **Invalidation de tokens** : Blacklist des tokens révoqués
+- ⏳ **Sécurité** : Protection CSRF, rate limiting
 
 ---
 
 ### 📝 Gestion des Posts (Priorité Haute)
 
 #### 3. CRUD complet des posts
-- **Création** : Publier un nouveau post avec validation
-- **Lecture** : Affichage des posts (liste, détail, pagination)
-- **Modification** : Éditer ses propres posts
-- **Suppression** : Supprimer ses posts (soft delete optionnel)
-- **Limite de caractères** : Validation de longueur (ex: 280 caractères)
+- ✅ **Création** : Publier un nouveau post avec validation
+- ✅ **Lecture** : Affichage des posts (liste publique)
+- ⏳ **Détail** : Page de détail d'un post individuel
+- ⏳ **Pagination** : Pagination des posts
+- ✅ **Modification** : Éditer ses propres posts
+- ✅ **Suppression** : Supprimer ses posts (hard delete actuellement)
+- ⏳ **Soft delete** : Suppression douce avec possibilité de restauration
+- ✅ **Limite de caractères** : Validation de longueur (500 caractères)
 
 #### 4. Types de contenu enrichi
 - **Médias** : Upload d'images, GIFs, vidéos
@@ -209,12 +260,12 @@ Le projet est actuellement en phase de setup initial avec :
 ## 📊 Priorisation Recommandée
 
 ### Phase 1 - MVP (Minimum Viable Product)
-1. Authentification complète (inscription, connexion, JWT)
-2. CRUD posts de base
-3. Système de likes
-4. Follow/Unfollow
-5. Feed chronologique
-6. Profil utilisateur basique
+1. ✅ Authentification de base (inscription, connexion, JWT) - **FAIT**
+2. ✅ CRUD posts de base - **FAIT**
+3. ⏳ Système de likes - **À FAIRE**
+4. ⏳ Follow/Unfollow - **À FAIRE**
+5. ⏳ Feed chronologique (actuellement liste simple) - **À AMÉLIORER**
+6. ⏳ Profil utilisateur basique - **À FAIRE**
 
 ### Phase 2 - Engagement
 7. Commentaires/réponses
@@ -236,10 +287,30 @@ Le projet est actuellement en phase de setup initial avec :
 
 ## 💡 Notes d'Implémentation
 
-- **Sécurité** : Toujours hasher les mots de passe (bcrypt/argon2)
-- **Validation** : Valider toutes les entrées utilisateur
-- **Rate limiting** : Limiter les requêtes pour éviter les abus
-- **Sanitization** : Nettoyer le contenu utilisateur (XSS protection)
-- **Accessibilité** : Respecter les standards WCAG
-- **SEO** : Optimisation pour les moteurs de recherche (meta tags, sitemap)
+- ✅ **Sécurité** : Mots de passe hashés avec bcrypt
+- ✅ **Validation** : Validation des entrées utilisateur (class-validator)
+- ⏳ **Rate limiting** : Limiter les requêtes pour éviter les abus
+- ⏳ **Sanitization** : Nettoyer le contenu utilisateur (XSS protection)
+- ⏳ **Accessibilité** : Respecter les standards WCAG
+- ⏳ **SEO** : Optimisation pour les moteurs de recherche (meta tags, sitemap)
+
+## 🎯 Prochaines Étapes Recommandées
+
+### Court terme (1-2 semaines)
+1. **Système de likes** : Permettre d'aimer un post avec compteur
+2. **Profil utilisateur** : Page de profil avec posts de l'utilisateur
+3. **Pagination** : Pagination des posts pour améliorer les performances
+4. **Page de détail** : Page individuelle pour chaque post
+
+### Moyen terme (2-4 semaines)
+5. **Follow/Unfollow** : Système de suivi d'utilisateurs
+6. **Feed personnalisé** : Fil d'actualité basé sur les utilisateurs suivis
+7. **Recherche basique** : Recherche de posts et utilisateurs
+8. **Notifications** : Notifications pour likes, nouveaux followers
+
+### Long terme (1-2 mois)
+9. **Commentaires** : Système de réponses aux posts
+10. **Hashtags** : Support des hashtags dans les posts
+11. **Mentions** : Mentions d'utilisateurs (@username)
+12. **Upload de médias** : Images dans les posts
 

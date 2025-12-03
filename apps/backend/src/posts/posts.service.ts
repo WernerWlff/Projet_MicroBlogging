@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 @Injectable()
 export class PostsService {
@@ -60,6 +61,36 @@ export class PostsService {
         }
 
         return post;
+    }
+
+    async update(id: string, userId: string, updatePostDto: UpdatePostDto) {
+        const post = await this.prisma.post.findUnique({
+            where: { id },
+        });
+
+        if (!post) {
+            throw new NotFoundException('Post not found');
+        }
+
+        if (post.authorId !== userId) {
+            throw new UnauthorizedException('You can only update your own posts');
+        }
+
+        return this.prisma.post.update({
+            where: { id },
+            data: {
+                content: updatePostDto.content,
+            },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        email: true,
+                        username: true,
+                    },
+                },
+            },
+        });
     }
 
     async remove(id: string, userId: string) {

@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   db:
     image: postgres:18
@@ -26,6 +24,7 @@ services:
       - "3001:3001"
     environment:
       DATABASE_URL: "postgresql://user:password@db:5432/microblogging?schema=public"
+      RUN_SEED: "false"  # Mettre à "false" pour désactiver le seed automatique
     depends_on:
       db:
         condition: service_healthy

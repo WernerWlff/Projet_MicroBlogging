@@ -13,6 +13,8 @@ export default function Home() {
     const [loading, setLoading] = useState(true);
     const [posting, setPosting] = useState(false);
     const [error, setError] = useState('');
+    const [editingPostId, setEditingPostId] = useState<string | null>(null);
+    const [editingContent, setEditingContent] = useState('');
     const user = getUser();
 
     useEffect(() => {
@@ -70,6 +72,29 @@ export default function Home() {
             }
         } finally {
             setPosting(false);
+        }
+    };
+
+    const handleEdit = (post: Post) => {
+        setEditingPostId(post.id);
+        setEditingContent(post.content);
+    };
+
+    const handleCancelEdit = () => {
+        setEditingPostId(null);
+        setEditingContent('');
+    };
+
+    const handleUpdate = async (id: string) => {
+        if (!editingContent.trim()) return;
+
+        try {
+            const updatedPost = await api.updatePost(id, editingContent);
+            setPosts(posts.map((p) => (p.id === id ? updatedPost : p)));
+            setEditingPostId(null);
+            setEditingContent('');
+        } catch (err: any) {
+            setError(err.message || 'Failed to update post');
         }
     };
 
@@ -154,7 +179,7 @@ export default function Home() {
 
             <main className="max-w-4xl mx-auto px-4 py-8">
                 {/* Create Post Form - Seulement si connecté */}
-                {isAuthenticated() ? (
+                {isAuthenticated() && (
                     <div className="bg-white rounded-xl shadow-md p-6 mb-8">
                         <h2 className="text-xl font-semibold text-gray-900 mb-4">
                             Quoi de neuf ?
@@ -186,26 +211,6 @@ export default function Home() {
                                 </button>
                             </div>
                         </form>
-                    </div>
-                ) : (
-                    <div className="bg-white rounded-xl shadow-md p-6 mb-8 text-center">
-                        <p className="text-gray-600 mb-4">
-                            Connectez-vous pour partager vos pensées avec la communauté !
-                        </p>
-                        <div className="flex gap-4 justify-center">
-                            <Link
-                                href="/login"
-                                className="px-6 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors border border-blue-600"
-                            >
-                                Se connecter
-                            </Link>
-                            <Link
-                                href="/register"
-                                className="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg transition-all"
-                            >
-                                Créer un compte
-                            </Link>
-                        </div>
                     </div>
                 )}
 
@@ -250,17 +255,54 @@ export default function Home() {
                                         </p>
                                     </div>
                                     {user && post.authorId === user.id && (
-                                        <button
-                                            onClick={() => handleDelete(post.id)}
-                                            className="text-red-500 hover:text-red-700 text-sm font-medium"
-                                        >
-                                            Supprimer
-                                        </button>
+                                        <div className="flex gap-2">
+                                            {editingPostId === post.id ? (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleUpdate(post.id)}
+                                                        className="text-green-500 hover:text-green-700 text-sm font-medium"
+                                                    >
+                                                        Enregistrer
+                                                    </button>
+                                                    <button
+                                                        onClick={handleCancelEdit}
+                                                        className="text-gray-500 hover:text-gray-700 text-sm font-medium"
+                                                    >
+                                                        Annuler
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleEdit(post)}
+                                                        className="text-blue-500 hover:text-blue-700 text-sm font-medium"
+                                                    >
+                                                        Modifier
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(post.id)}
+                                                        className="text-red-500 hover:text-red-700 text-sm font-medium"
+                                                    >
+                                                        Supprimer
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
-                                <p className="text-gray-800 whitespace-pre-wrap">
-                                    {post.content}
-                                </p>
+                                {editingPostId === post.id ? (
+                                    <textarea
+                                        value={editingContent}
+                                        onChange={(e) => setEditingContent(e.target.value)}
+                                        maxLength={500}
+                                        rows={4}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                    />
+                                ) : (
+                                    <p className="text-gray-800 whitespace-pre-wrap">
+                                        {post.content}
+                                    </p>
+                                )}
                             </div>
                         ))
                     )}
