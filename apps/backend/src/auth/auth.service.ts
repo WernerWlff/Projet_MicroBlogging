@@ -97,5 +97,66 @@ export class AuthService {
 
         return user;
     }
-}
 
+    async profile(userId: string) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                email: true,
+                username: true,
+                createdAt: true,
+                updatedAt: true,
+                posts: {
+                    orderBy: {
+                        createdAt: 'desc',
+                    },
+                    select: {
+                        id: true,
+                        content: true,
+                        createdAt: true,
+                        updatedAt: true,
+                    },
+                },
+                _count: {
+                    select: {
+                        posts: true,
+                    },
+                },
+            },
+        });
+
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+
+        return {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+            postsCount: user._count.posts,
+            posts: user.posts,
+        };
+    }
+
+    async findAll() {
+        return this.prisma.user.findMany({
+            select: {
+                id : true,
+                email : true,
+                username : true,
+                createdAt : true,
+                _count: {
+                    select : {
+                        posts: true,
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+    }
+}
