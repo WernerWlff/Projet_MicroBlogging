@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { register, getUser, isAuthenticated, logout } from '@/lib/auth';
+import { Header } from '@/components/Header';
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -31,50 +32,7 @@ export default function RegisterPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-cream-50 via-cream-100 to-green-50">
-            {/* Header */}
-            <header className="bg-cream-50 shadow-sm border-b border-green-200">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <Link href="/" aria-label="Retour à l'accueil">
-                        <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-green-dark to-green-darker bg-clip-text text-transparent cursor-pointer">
-                            MicroBlogging
-                        </h1>
-                    </Link>
-                    <nav className="flex items-center gap-2 sm:gap-4" aria-label="Navigation principale">
-                        {user ? (
-                            <>
-                                <span className="text-green-darkest font-medium text-sm sm:text-base">
-                                    {user.username}
-                                </span>
-                                <button
-                                    onClick={logout}
-                                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-green-darkest hover:text-green-darkest hover:bg-green-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-dark focus:ring-offset-2"
-                                    aria-label="Se déconnecter"
-                                >
-                                    Déconnexion
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <Link
-                                    href="/login"
-                                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-green-dark hover:text-green-darker hover:bg-green-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-dark focus:ring-offset-2"
-                                    aria-label="Se connecter"
-                                >
-                                    Connexion
-                                </Link>
-                                <Link
-                                    href="/register"
-                                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-gradient-to-r from-green-dark to-green-darker hover:from-green-darker hover:to-green-darkest rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-green-dark focus:ring-offset-2"
-                                    aria-label="Créer un compte"
-                                >
-                                    S'inscrire
-                                </Link>
-                            </>
-                        )}
-                    </nav>
-                </div>
-            </header>
-
+            <Header/>
             <div className="flex items-center justify-center min-h-[calc(100vh-80px)] py-6 sm:py-8 px-4">
             <div className="max-w-md w-full space-y-6 sm:space-y-8 p-6 sm:p-8 bg-cream-50 rounded-2xl shadow-xl border border-green-100">
                 <div>
