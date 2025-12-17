@@ -1,3 +1,5 @@
+import { Profiler } from "inspector/promises";
+
 // URL de l'API - côté client, toujours utiliser l'URL publique
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -15,6 +17,34 @@ export interface Post {
     author: User;
     createdAt: string;
     updatedAt: string;
+}
+
+export interface UserPost {
+    id: string;
+    content: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface ProfileResponse {
+    id: string;
+    email: string;
+    username: string;
+    content: string;
+    createdAt: string;
+    updatedAt: string;
+    postsCount: number;
+    posts: UserPost[];
+}
+
+export interface UserListItems {
+    id: string;
+    email: string;
+    username: string;
+    createdAt: string;
+    _count: {
+        posts: number;
+    };
 }
 
 export interface AuthResponse {
@@ -104,6 +134,18 @@ class ApiClient {
     async deletePost(id: string): Promise<void> {
         return this.request<void>(`/posts/${id}`, {
             method: 'DELETE',
+        });
+    }
+
+    async getProfile(): Promise<ProfileResponse> {
+        return this.request<ProfileResponse>('/auth/profile', {
+            method: 'GET',
+        });
+    }
+
+    async getUsers(): Promise<UserListItems[]> {
+        return this.request<UserListItems[]>('/auth/users', {
+            method: 'GET',
         });
     }
 }
