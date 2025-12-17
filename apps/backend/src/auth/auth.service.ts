@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
@@ -127,7 +127,7 @@ export class AuthService {
         });
 
         if (!user) {
-            throw new UnauthorizedException('User not found');
+            throw new NotFoundException('User not found');
         }
 
         return {

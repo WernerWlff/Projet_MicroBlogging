@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api, ProfileResponse } from '@/lib/api';
-import { isAuthenticated, getUser, logout } from '@/lib/auth';
+import { isAuthenticated } from '@/lib/auth';
 import { Header } from '@/components/Header';
 
 export default function ProfilePage() {
@@ -12,7 +12,6 @@ export default function ProfilePage() {
     const [profile, setProfile] = useState<ProfileResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const user = getUser();
 
     useEffect(() => {
         if (!isAuthenticated()) {
@@ -26,12 +25,10 @@ export default function ProfilePage() {
             try {
                 const data = await api.getProfile();
                 setProfile(data);
-            } catch (err: any) {
-                console.error('Error loading profile:', err);
-                setError(err.message || 'Impossible de charger le profil. Vérifiez que le backend est démarré.');
-                if (err.message?.includes('Unauthorized') || err.message?.includes('token')) {
-                    router.push('/login');
-                }
+            } catch (err) { 
+                const message = err instanceof Error ? err.message : 'Erreur inconnue'; 
+                setError(message || 'Impossible de charger le profil.');
+                router.push('/login');
             } finally {
                 setLoading(false);
             }
